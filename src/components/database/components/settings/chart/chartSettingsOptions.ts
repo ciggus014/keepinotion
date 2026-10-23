@@ -52,11 +52,10 @@ export const DATE_CONDITION_OPTIONS = [
 ] as const;
 
 /**
- * Mirrors desktop's `_isPremiumChartType`: only the basic Bar chart is free.
- * On AppFlowy-hosted instances without a Pro plan, the other three are gated
- * behind an upgrade prompt. Self-hosted instances have every chart type
- * (`useSubscriptionPlan` reports `isPro = true` there).
+ * Keepinotion: every chart type is free. The upstream premium gating
+ * (`_isPremiumChartType`) is disabled so Line, HorizontalBar and Donut work
+ * on any plan, matching Notion's unlimited charts.
  */
-export function isPremiumChartType(type: ChartType): boolean {
-  return type === ChartType.HorizontalBar || type === ChartType.Line || type === ChartType.Donut;
+export function isPremiumChartType(_type: ChartType): boolean {
+  return false;
 }

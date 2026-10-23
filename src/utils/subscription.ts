@@ -12,7 +12,9 @@ import { isSameUserUid, UserUid } from '@/application/user-uid';
 const PRO_ACCESS_PLANS = new Set([SubscriptionPlan.Pro, SubscriptionPlan.Team]);
 
 export function isLimitedDatabaseViewLayout(layout?: ViewLayout): boolean {
-  return layout === ViewLayout.Timeline || layout === ViewLayout.Form || layout === ViewLayout.Chart;
+  // Keepinotion: chart views are unlimited, so only Timeline and Form remain
+  // plan-limited layouts.
+  return layout === ViewLayout.Timeline || layout === ViewLayout.Form;
 }
 
 /** Shared access rule for billing settings and the dialog that handles their Change plan action. */

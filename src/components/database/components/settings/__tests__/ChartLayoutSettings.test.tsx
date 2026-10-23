@@ -574,7 +574,7 @@ describe('ChartLayoutSettings', () => {
     expect(mockSetSearch).not.toHaveBeenCalled();
   });
 
-  it('badges locked premium types on official hosting and lets the owner open the upgrade prompt', async () => {
+  it('keeps every chart type unlocked on official hosting regardless of plan', () => {
     mockIsHosted = true;
     mockPlan = { isPro: false, isLoading: false, hasError: false };
     renderPanel();
@@ -587,52 +587,21 @@ describe('ChartLayoutSettings', () => {
     PREMIUM_TYPES.forEach(({ slug, name }) => {
       const button = screen.getByTestId(`chart-type-button-${slug}`);
 
-      expectCrowned(button, true);
+      expectCrowned(button, false);
       expect(button.getAttribute('aria-disabled')).toBeNull();
-      // The notched outline leaves the badge corner free of a border line.
-      expect(button.querySelector('[data-chart-type-notched-border] path')?.getAttribute('d')).toContain('H36M45.5 10');
-      // Desktop's crown is visual only; the web keeps its spoken cue.
-      expect(screen.getByRole('button', { name: `${name} (Upgrade Required)` })).toBe(button);
+      expect(screen.getByRole('button', { name })).toBe(button);
     });
 
-    // The tooltip stays the plain type name, like desktop.
-    act(() => screen.getByTestId('chart-type-button-line').focus());
-    expect((await screen.findByRole('tooltip')).textContent).toBe('Line');
-
+    // Keepinotion: charts are unlimited, so a Free plan still switches types.
     fireEvent.click(screen.getByTestId('chart-type-button-line'));
 
-    expect(mockUpdate).not.toHaveBeenCalled();
-    expect(toast.error).not.toHaveBeenCalled();
-    expect(mockSetSearch).toHaveBeenCalledTimes(1);
-
-    const updateSearch = mockSetSearch.mock.calls[0][0] as (prev: URLSearchParams) => URLSearchParams;
-
-    expect(updateSearch(new URLSearchParams()).get('action')).toBe('change_plan');
-    // The settings menu closes so the plan modal can take over.
-    await waitFor(() => expect(screen.queryByTestId('chart-layout-settings')).toBeNull());
-  });
-
-  it('keeps the menu open and tells other members to ask the owner for a locked type', () => {
-    mockIsHosted = true;
-    mockPlan = { isPro: false, isLoading: false, hasError: false };
-    mockRole = Role.Member;
-    renderPanel();
-
-    const line = screen.getByTestId('chart-type-button-line');
-
-    expectCrowned(line, true);
-
-    fireEvent.click(line);
-
-    // Desktop `showWorkspaceUpgradePrompt`: non-owners get an error toast, no dialog.
-    expect(toast.error).toHaveBeenCalledTimes(1);
-    expect(toast.error).toHaveBeenCalledWith('billingLimits.workspaceProRequired');
+    expect(mockUpdate).toHaveBeenCalledWith({ xFieldId: 'status', chartType: ChartType.Line });
     expect(mockSetSearch).not.toHaveBeenCalled();
-    expect(mockUpdate).not.toHaveBeenCalled();
+    expect(toast.error).not.toHaveBeenCalled();
     expect(screen.getByTestId('chart-layout-settings')).toBeTruthy();
   });
 
-  it('keeps a stored premium type selected while it is locked', () => {
+  it('keeps a stored premium type selected without locking it', () => {
     mockIsHosted = true;
     mockPlan = { isPro: false, isLoading: false, hasError: false };
     mockSetting = { ...BASE_SETTING, chartType: ChartType.Donut };
@@ -641,62 +610,29 @@ describe('ChartLayoutSettings', () => {
     const donut = screen.getByTestId('chart-type-button-donut');
 
     expect(donut.getAttribute('aria-pressed')).toBe('true');
-    expect(donut.getAttribute('data-locked')).toBe('true');
-    expect(donut.querySelector('[data-chart-type-notched-border]')?.getAttribute('class')).toContain(
-      'text-border-info-thick'
-    );
+    expect(donut.getAttribute('data-locked')).toBeNull();
   });
 
-  it.each([
-    ['loading', { isPro: false, isLoading: true, hasError: false }],
-    ['failed to load', { isPro: false, isLoading: false, hasError: true }],
-  ])('shows no crown and ignores premium clicks while the plan is %s', (_state, plan) => {
+  it('keeps every chart type clickable regardless of plan state', () => {
     mockIsHosted = true;
-    mockPlan = plan;
+    mockPlan = { isPro: false, isLoading: true, hasError: false };
     renderPanel();
 
     PREMIUM_TYPES.forEach(({ slug, name }) => {
       const button = screen.getByTestId(`chart-type-button-${slug}`);
 
-      // Not Free until billing says so: nothing flashes for a Pro workspace.
+      // Keepinotion: charts are unlimited, so no plan state locks a type.
       expectCrowned(button, false);
-      expect(button.getAttribute('aria-disabled')).toBe('true');
-      // Not a Radix-disabled item: it keeps its look and stays reachable.
+      expect(button.getAttribute('aria-disabled')).toBeNull();
       expect(button.hasAttribute('data-disabled')).toBe(false);
       expect(screen.getByRole('button', { name })).toBe(button);
     });
-    expect(screen.getByTestId('chart-type-button-bar').getAttribute('aria-disabled')).toBeNull();
 
     fireEvent.click(screen.getByTestId('chart-type-button-line'));
 
-    expect(mockUpdate).not.toHaveBeenCalled();
+    expect(mockUpdate).toHaveBeenCalledWith({ xFieldId: 'status', chartType: ChartType.Line });
     expect(mockSetSearch).not.toHaveBeenCalled();
     expect(toast.error).not.toHaveBeenCalled();
-    expect(screen.getByTestId('chart-layout-settings')).toBeTruthy();
-
-    // Bar is free and still works.
-    fireEvent.click(screen.getByTestId('chart-type-button-bar'));
-    expect(mockUpdate).toHaveBeenCalledWith({ xFieldId: 'status', chartType: ChartType.Bar });
-  });
-
-  it('keeps premium types inert without a crown while the hosting mode is unknown', () => {
-    mockIsHosted = false;
-    mockPlan = { isPro: false, isLoading: true, hasError: false };
-    renderPanel();
-
-    const line = screen.getByTestId('chart-type-button-line');
-
-    expectCrowned(line, false);
-    expect(line.getAttribute('aria-disabled')).toBe('true');
-    expect(line.getAttribute('aria-label')).toBe('Line');
-    expect(screen.getByTestId('chart-type-button-bar').getAttribute('aria-disabled')).toBeNull();
-
-    fireEvent.click(line);
-
-    expect(mockUpdate).not.toHaveBeenCalled();
-    expect(mockSetSearch).not.toHaveBeenCalled();
-    expect(toast.error).not.toHaveBeenCalled();
-    expect(screen.getByTestId('chart-layout-settings')).toBeTruthy();
   });
 
   it('renders nothing in read-only mode and skips the subscription fetch', () => {

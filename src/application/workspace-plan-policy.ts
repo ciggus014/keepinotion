@@ -27,7 +27,8 @@ class HostedWorkspacePlanPolicy extends WorkspacePlanPolicy {
   }
 
   requiresOnlineViewCreation(layout: ViewLayout): boolean {
-    return layout === ViewLayout.Form || layout === ViewLayout.Chart;
+    // Keepinotion: chart views are unlimited; only Form needs the online quota.
+    return layout === ViewLayout.Form;
   }
 
   getUpgradeMessage(serverMessage: unknown): string | undefined {
