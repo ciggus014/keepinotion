@@ -211,11 +211,9 @@ describe('ChartLayoutSettings', () => {
     expect(screen.queryByText('Y-Axis')).toBeNull();
     expect(panel.querySelector('[data-testid^="chart-y-axis-field-"]')).toBeNull();
 
-    expect(mockUseWorkspaceSubscriptionPlan).toHaveBeenCalledWith({
-      workspaceId: 'workspace-id',
-      getSubscriptions: mockGetSubscriptions,
-      enabled: true,
-    });
+    // Keepinotion: the layout settings never read the billing plan, since
+    // every chart type is free.
+    expect(mockUseWorkspaceSubscriptionPlan).not.toHaveBeenCalled();
   });
 
   it('marks the current chart type, X field and aggregation like desktop', () => {
@@ -635,17 +633,15 @@ describe('ChartLayoutSettings', () => {
     expect(toast.error).not.toHaveBeenCalled();
   });
 
-  it('renders nothing in read-only mode and skips the subscription fetch', () => {
+  it('renders nothing in read-only mode and issues no billing read', () => {
     mockReadOnly = true;
     renderPanel();
 
     expect(screen.queryByTestId('chart-layout-settings')).toBeNull();
     expect(screen.queryByTestId('chart-type-button-bar')).toBeNull();
     expect(screen.queryByTestId('chart-omit-zero-values')).toBeNull();
-    expect(mockUseWorkspaceSubscriptionPlan).toHaveBeenCalledWith({
-      workspaceId: 'workspace-id',
-      getSubscriptions: mockGetSubscriptions,
-      enabled: false,
-    });
+    // Keepinotion: charts are unlimited, so the layout settings never read the
+    // workspace plan — not even in the editable case.
+    expect(mockUseWorkspaceSubscriptionPlan).not.toHaveBeenCalled();
   });
 });
