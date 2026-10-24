@@ -14,6 +14,24 @@ module.exports = {
     extend: {
       colors,
       boxShadow,
+      // Keepinotion: the Notion stack. System UI first so the app inherits the
+      // host OS's native feel, with Inter as the cross-platform fallback that
+      // Notion itself relies on.
+      fontFamily: {
+        sans: [
+          'ui-sans-serif',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          '"Segoe UI"',
+          'Inter',
+          'Roboto',
+          '"Helvetica Neue"',
+          'Arial',
+          'sans-serif',
+          '"Apple Color Emoji"',
+          '"Segoe UI Emoji"',
+        ],
+      },
       borderRadius: {
         100: '4px',
         200: '6px',

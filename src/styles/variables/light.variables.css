@@ -1,30 +1,30 @@
 
 :root {
     --bg-selection: #2383e226;
-    --text-title: #333333;
-    --text-caption: #828282;
+    --text-title: #37352F;
+    --text-caption: #787774;
     --text-placeholder: #b5bbd3;
     --text-disabled: #e0e0e0;
     --text-link-default: #2383e2;
     --text-link-hover: #4a9fd4;
     --text-link-pressed: #1b6ec2;
     --text-link-disabled: #e7f3fd;
-    --icon-primary: #333333;
+    --icon-primary: #37352F;
     --icon-secondary: #59647a;
     --icon-disabled: #e0e0e0;
     --icon-on-toolbar: #ffffff;
     --line-border: #bdbdbd;
-    --line-divider: #1F232923;
+    --line-divider: #37352F1A;
     --line-default: #f3f4f6;
     --line-on-toolbar: #4f4f4f;
-    --line-card: #1F23291E;
+    --line-card: #37352F1A;
     --fill-toolbar: #333333;
     --fill-default: #2383e2;
     --fill-hover: #4a9fd4;
     --fill-pressed: #1b6ec2;
     --fill-active: #e7f3fd;
-    --fill-list-hover: #1F23290F;
-    --fill-list-active: #f9fafd;
+    --fill-list-hover: #37352F0F;
+    --fill-list-active: #37352F0A;
     --content-blue-400: #2383e2;
     --content-blue-300: #4a9fd4;
     --content-blue-600: #1b6ec2;
@@ -37,8 +37,8 @@
     --content-on-fill-hover: #2383e2;
     --content-on-fill: #ffffff;
     --content-on-tag: #4f4f4f;
-    --bg-body: #ffffff;
-    --bg-base: #F7F8FC;
+    --bg-body: #FFFFFF;
+    --bg-base: #F7F6F3;
     --bg-mask: #0000008C;
     --bg-tips: #e7f3fd;
     --bg-brand: #2c144b;
@@ -127,7 +127,7 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
+    --radius: 0.375rem;
     --icon: 214, 7%, 43%;
     --selection: #e7f3fd;
     --button-disabled: 216, 12%, 83%;

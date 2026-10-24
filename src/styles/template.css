@@ -18,6 +18,10 @@ body {
     margin: 0;
     height: 100%;
     overflow: hidden;
+    /* Keepinotion: Notion's stack, so text renders exactly like the reference. */
+    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 [contenteditable] {
