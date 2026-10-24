@@ -8,6 +8,7 @@ import { useCurrentWorkspaceId, useIsOfficialHosted, useUserWorkspaceInfo } from
 import { AccountAppPanel } from '@/components/app/settings/AccountAppPanel';
 import { ManageDataPanel } from '@/components/app/settings/ManageDataPanel';
 import { MembersPanel } from '@/components/app/settings/MembersPanel';
+import { FeaturesPanel } from '@/components/app/settings/FeaturesPanel';
 import { ProfilePanel } from '@/components/app/settings/ProfilePanel';
 import SettingMenu from '@/components/app/settings/SettingMenu';
 import { useCurrentUserOptional } from '@/components/main/app.hooks';
@@ -92,6 +93,7 @@ export function SettingsDialog({ open, onClose, onRequestOpen }: SettingsDialogP
         {selectedItem === SettingMenuItem.PROFILE && <ProfilePanel />}
         {selectedItem === SettingMenuItem.MEMBERS && <MembersPanel />}
         {selectedItem === SettingMenuItem.MANAGE_DATA && <ManageDataPanel onImport={handleImport} />}
+        {selectedItem === SettingMenuItem.FEATURES && <FeaturesPanel />}
         {open && selectedItem === SettingMenuItem.CONNECTIONS && workspaceId && (
           <Suspense
             fallback={

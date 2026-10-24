@@ -4824,5 +4824,14 @@
   "userErrorDetail": {
     "withCode": "Error {{code}}: {{message}}",
     "publishNameTooLong": "Keep the page address to {{max}} characters or fewer."
+  },
+  "featureUnlock": {
+    "title": "Features",
+    "menuLabel": "Features",
+    "unlockAllTitle": "Unlock every feature",
+    "unlockAllDescription": "Removes the upgrade prompts, crowns and plan checks for templates, file history, advanced colors, charts, timeline and forms. Stored in this browser only.",
+    "serverNote": "Limits the server enforces on writes (storage, AI minutes, creating new views over quota) are not affected.",
+    "reloadRequired": "Reload the page to apply the change.",
+    "reload": "Reload"
   }
 }

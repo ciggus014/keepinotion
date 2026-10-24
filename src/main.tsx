@@ -2,7 +2,12 @@ import ReactDOM from 'react-dom/client';
 
 import { captureServerRenderedMarkup } from '@/components/_shared/ServerRenderedFallback';
 import App from '@/components/main/App';
+import { applyStoredUnlockPreference } from '@/utils/feature-unlock';
 import './styles/global.css';
+
+// Re-apply the stored "unlock every feature" preference before the first
+// render, so the initial hosting-mode snapshot already reflects it.
+applyStoredUnlockPreference();
 
 const root = document.getElementById('root')!;
 

@@ -2589,6 +2589,8 @@ export enum SettingMenuItem {
   SITES = 'SITES',
   PLAN = 'PLAN',
   BILLING = 'BILLING',
+  /** Keepinotion: local switch for the client-side plan gates. */
+  FEATURES = 'FEATURES',
 }
 
 export interface GenerateAISummaryRowPayload {

@@ -47,6 +47,11 @@ function SettingMenu({ selectedItem, onSelectItem, showBilling = false }: Settin
         label: t('settings.connections.menuLabel'),
         IconComponent: ConnectionsIcon,
       },
+      {
+        value: SettingMenuItem.FEATURES,
+        label: t('featureUnlock.menuLabel', 'Features'),
+        IconComponent: ManageDataIcon,
+      },
       ...(showBilling
         ? [
             {
