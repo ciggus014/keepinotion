@@ -127,10 +127,24 @@ export function Search() {
 
   const onKeyDown = useCallback((e: KeyboardEvent) => {
     switch (true) {
-      case createHotkey(HOT_KEY_NAME.SEARCH)(e):
+      case createHotkey(HOT_KEY_NAME.SEARCH)(e): {
+        // mod+k is Notion's second search binding but also the editor's link
+        // shortcut. Inside a text field or the editable canvas the editor must
+        // win, otherwise selecting text and pressing mod+k would open search
+        // instead of the link popover. mod+p has no such conflict.
+        const target = e.target as HTMLElement | null;
+        const editable =
+          target?.isContentEditable ||
+          target?.tagName === 'INPUT' ||
+          target?.tagName === 'TEXTAREA' ||
+          target?.closest?.('[contenteditable="true"]');
+
+        if (editable && e.key.toLowerCase() === 'k' && !e.shiftKey && !e.altKey) return;
+
         e.preventDefault();
         setOpen(true);
         break;
+      }
       default:
         break;
     }
