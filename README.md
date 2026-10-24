@@ -1,85 +1,67 @@
-<h1 align="center" style="border-bottom: none">AppFlowy Web<br>
-⭐️ The Open Source Notion Alternative ⭐️
-</h1>
-<p align="center"> Use AppFlowy right in <a href="https://www.appflowy.com">your browser</a><br>
-</p>
+# Keepinotion
 
+Um fork do [AppFlowy Web](https://github.com/AppFlowy-IO/appflowy-web) com o objetivo de ser
+uma alternativa open source ao Notion mais fiel ao original.
 
-<p align="center">
-Bring projects, wikis, and teams together with AI
-</p>
-<p align="center">
-    <a href="http://appflowy.com"><b>Web</b></a> •
-    <a href="https://appflowy.com/download">Apps</a> •
-    <a href="https://discord.gg/9Q2xaN37tV"><b>Discord</b></a> •
-    <a href="https://twitter.com/appflowy"><b>Twitter</b></a> •
-    <a href="https://www.reddit.com/r/appflowy/"><b>Reddit</b></a> •
-    <a href="https://forum.appflowy.io/"><b>Forum</b></a>
-</p>
+## O que este fork muda
 
+| Mudança | Estado |
+|---|---|
+| **Gráficos sem limite de plano** — Bar, Line, Horizontal Bar e Donut liberados para todos os planos | ✅ |
+| **Paleta Notion-like** — azul sóbrio `#2383e2` no lugar do ciano AppFlowy, tema claro e escuro | ✅ |
+| **Embed de widgets externos** (Indify, Blocky, Widgets for Notion) | 🚧 planejado |
+| **Galeria de templates nativos** (meeting notes, wiki, task list, OKR…) | 🚧 planejado |
 
-![appflowy_web](https://github.com/user-attachments/assets/beb79630-b134-4de0-b464-d164cd0f9adf)
-![appflowy_web_property_types](https://github.com/user-attachments/assets/074f859d-2e7e-4bf0-ac00-ba0b36e808e5)
-![appflowy_web_grid_view](https://github.com/user-attachments/assets/e1b8a950-5b57-4279-90aa-3917aae2f83b)
-![appflowy_web_kanban_board_dark_mode](https://github.com/user-attachments/assets/3a6fda95-e57b-45d0-ae88-f2df362675ce)
-![appflowy_web_open_row](https://github.com/user-attachments/assets/1c5a2891-90e0-4831-bfd5-89229235bbb4)
-![appflowy_web_open_row_in_full_page](https://github.com/user-attachments/assets/011a9408-7ae4-4144-b114-3613e699f6b5)
-![appflowy_web_quick_note_small_window](https://github.com/user-attachments/assets/8b72462c-00a2-4398-8d5d-6ee982f6a30e)
-![appflowy_web_quick_note_large](https://github.com/user-attachments/assets/5c633e60-6f34-454c-91db-236a1b78966a)
-![appflowy_web_share](https://github.com/user-attachments/assets/64b9955d-b11f-4aa1-b32b-ea79ea7f3566)
+O plano de execução detalhado fica em [`ROADMAP.md`](./ROADMAP.md).
 
-## Table of Contents
+### Limitação conhecida: quota de gráficos no servidor
 
-- [Use Cases](#use-cases)
-- [Features](#features) 
-- [Installation](#installation)
-- [Development](#development)
-- [Deployment](#deployment)
-- [Documentation](#documentation)
-- [License](#license)
+O desbloqueio de gráficos é **client-side**. Com o AppFlowy Cloud oficial como backend, o
+endpoint `database-view-creation-status` ainda reporta `can_create_chart`, e o servidor pode
+recusar a **criação de um gráfico novo** no plano Free. Os tipos de gráfico dentro de um
+gráfico já existente estão liberados. Para desbloquear a criação de fato é preciso um backend
+próprio (self-hosted) — ver ROADMAP.
 
-## Use cases
-- Build and maintain a knowledge base for your team
-- Create and publish documentation for your customers and audience
-- Write, publish, and manage content with AI
-- Manage tasks and projects for yourself and your team
+## Desenvolvimento
 
-## Features
-- Write beautiful documents with rich content types
-- Create custom Grid & Kanban Board-view databases to manage and digest data
-- Add a Quick Note to jot down lists, ideas, or to-dos
-- Invite members to your workspace for seamless collaboration
-- Create multiple public and private spaces to better organize your content
+Requisitos: Node.js ≥ 18, pnpm ≥ 10.9.
 
-## Installation
-### Cloud: we host AppFlowy for you
-Sign up for a free account on <a href="https://appflowy.com">appflowy.com</a>—it's the fastest way to get started with AppFlowy without hassles
+```bash
+pnpm install
+pnpm run dev
+```
 
-### Self-hosted: host AppFlowy on your own server
-Take charge of your data; no vendor lock-in. Follow our <a href="https://appflowy.com/docs/self-host-appflowy-overview">deployment guide</a> to get started.
-Join our <a href="https://discord.gg/FFmDE99bgA">Discord</a> server to get help!
+O dev server abre em `http://localhost:3000`.
 
-## Built with 🛠️
-![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
-![Bun](https://img.shields.io/badge/Bun-000000?style=for-the-badge&logo=bun&logoColor=white)
-![Nginx](https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+### Apontando para um backend
 
-## Development
+O frontend precisa de um backend AppFlowy Cloud. Crie um `.env.local` na raiz:
 
-Check out the [development guide](./doc/DEVELOPMENT_GUIDE.md) for more details
+```bash
+APPFLOWY_BASE_URL=https://beta.appflowy.cloud
+APPFLOWY_GOTRUE_BASE_URL=https://beta.appflowy.cloud/gotrue
+APPFLOWY_WS_BASE_URL=wss://beta.appflowy.cloud/ws/v2
+```
 
-## Deployment
-Once AppFlowy Cloud has been setup, you can follow the [deployment guide](https://appflowy.com/docs)
-to deploy AppFlowy Web.
+> Use `beta.appflowy.cloud` (produção). O `test.appflowy.cloud` é o ambiente de staging e
+> **recusa cadastro de emails não autorizados** — o login falha com "You don't have permission".
 
-## Documentation
+Para rodar o backend localmente (recomendado para self-hosted, sem limites de plano):
+siga o [guia do AppFlowy Cloud](https://github.com/AppFlowy-IO/AppFlowy-Cloud).
 
-- **[Deployment Guide](doc/DEPLOYMENT.md)** - Detailed environment configuration, architecture diagrams, and troubleshooting
-- **[AppFlowy Cloud Repository](https://github.com/AppFlowy-IO/AppFlowy-Cloud)** - Backend setup and configuration
-- **[Official Documentation](https://appflowy.com/docs)** - Complete AppFlowy documentation
+### Verificação
 
-## License
-Distributed under the AGPLv3 License. See [`LICENSE.md`](https://github.com/AppFlowy-IO/AppFlowy-Web/blob/main/LICENSE) for
-more information.
+```bash
+pnpm type-check                          # tsc --noEmit -p tsconfig.web.json
+npx jest --coverage=false <arquivo>      # testes unitários
+pnpm build                               # build de produção
+```
+
+## Licença e atribuição
+
+Este projeto é derivado do AppFlowy Web, distribuído sob **AGPL-3.0** (ver `LICENSE`).
+Por ser um fork AGPL-3.0, qualquer instância hospedada deste software precisa oferecer o
+código-fonte correspondente aos seus usuários.
+
+AppFlowy é uma marca do AppFlowy IO, Inc. Este fork não é afiliado nem endossado pelo
+projeto AppFlowy.

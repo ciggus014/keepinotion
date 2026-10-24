@@ -136,24 +136,26 @@ describe('workspace database view creation', () => {
     const { result } = mount();
 
     await waitFor(() => expect(result.current.getAction(ViewLayout.Form).type).toBe('create'));
-    expect(result.current.getAction(ViewLayout.Chart)).toMatchObject({ type: 'upgrade', requiresPro: true });
+    // Keepinotion: charts are unlimited, so an exhausted chart quota is ignored.
+    expect(result.current.getAction(ViewLayout.Chart).type).toBe('create');
     expect(result.current.getAction(ViewLayout.Timeline).type).toBe('create');
   });
 
   it.each([Role.Member, Role.Guest])('never offers billing to a %s after an allowance is used', async (memberRole) => {
     role = memberRole;
-    quota.mockResolvedValue({ can_create_form: true, can_create_chart: false });
+    quota.mockResolvedValue({ can_create_form: false, can_create_chart: true });
     const { result } = mount();
 
-    await waitFor(() => expect(result.current.getAction(ViewLayout.Chart).reason).toBe('databaseViewCreation.askOwner'));
-    expect(result.current.getAction(ViewLayout.Chart)).toMatchObject({
+    await waitFor(() => expect(result.current.getAction(ViewLayout.Form).reason).toBe('databaseViewCreation.askOwner'));
+    expect(result.current.getAction(ViewLayout.Form)).toMatchObject({
       type: 'disabled',
       reason: 'databaseViewCreation.askOwner',
       requiresPro: false,
     });
-    expect(result.current.checkCreation(ViewLayout.Chart)).toBe(false);
+    expect(result.current.checkCreation(ViewLayout.Form)).toBe(false);
     expect(result.current.checkCreation(ViewLayout.Timeline)).toBe(false);
-    expect(result.current.checkCreation(ViewLayout.Form)).toBe(true);
+    // Keepinotion: charts are unlimited, so they stay creatable for every role.
+    expect(result.current.checkCreation(ViewLayout.Chart)).toBe(true);
     expect(checkout).not.toHaveBeenCalled();
   });
 
@@ -173,17 +175,17 @@ describe('workspace database view creation', () => {
   });
 
   it('opens plan selection only for an upgrade action', async () => {
-    quota.mockResolvedValue({ can_create_form: true, can_create_chart: false });
+    quota.mockResolvedValue({ can_create_form: false, can_create_chart: true });
     const { result } = mount();
 
-    await waitFor(() => expect(result.current.getAction(ViewLayout.Chart).type).toBe('upgrade'));
-    expect(result.current.startCheckout(ViewLayout.Form)).toBeUndefined();
+    await waitFor(() => expect(result.current.getAction(ViewLayout.Form).type).toBe('upgrade'));
+    expect(result.current.startCheckout(ViewLayout.Chart)).toBeUndefined();
     expect(result.current.startCheckout(ViewLayout.Grid)).toBeUndefined();
     expect(currentSearch).toBe('');
     let opening: Promise<void> | undefined;
 
     act(() => {
-      opening = result.current.startCheckout(ViewLayout.Chart);
+      opening = result.current.startCheckout(ViewLayout.Form);
       expect(result.current.startCheckout(ViewLayout.Timeline)).toBe(opening);
     });
     await act(async () => { await opening; });
@@ -198,14 +200,14 @@ describe('workspace database view creation', () => {
     const { result, rerender } = mount();
 
     await waitFor(() =>
-      expect(result.current.getAction(ViewLayout.Chart).reason).toBe('databaseViewCreation.unavailable')
+      expect(result.current.getAction(ViewLayout.Form).reason).toBe('databaseViewCreation.unavailable')
     );
-    expect(result.current.getAction(ViewLayout.Chart).requiresPro).toBeUndefined();
+    expect(result.current.getAction(ViewLayout.Form).requiresPro).toBeUndefined();
     expect(result.current.getAction(ViewLayout.Timeline).requiresPro).toBeUndefined();
-    expect(result.current.checkCreation(ViewLayout.Chart)).toBe(false);
+    expect(result.current.checkCreation(ViewLayout.Form)).toBe(false);
     expect(toast.error).toHaveBeenCalledWith('databaseViewCreation.unavailable');
     // Desktop parity: a blocked attempt refetches, so trying again can succeed.
-    await waitFor(() => expect(result.current.getAction(ViewLayout.Chart).type).toBe('create'));
+    await waitFor(() => expect(result.current.getAction(ViewLayout.Form).type).toBe('create'));
     expect(quota).toHaveBeenCalledTimes(2);
     rerender({ open: false });
     rerender({ open: true });
@@ -229,10 +231,13 @@ describe('workspace database view creation', () => {
     jest.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
     const { result } = mount();
 
-    for (const layout of [ViewLayout.Form, ViewLayout.Chart, ViewLayout.Timeline]) {
+    for (const layout of [ViewLayout.Form, ViewLayout.Timeline]) {
       expect(result.current.getAction(layout).type).toBe(hosting === 'self-hosted' ? 'create' : 'disabled');
       expect(result.current.getAction(layout).requiresPro).toBeUndefined();
     }
+
+    // Keepinotion: charts are never plan-limited, so no hosting mode blocks them.
+    expect(result.current.getAction(ViewLayout.Chart).type).toBe('create');
 
     expect(quota).not.toHaveBeenCalled();
     expect(subscriptions).not.toHaveBeenCalled();
@@ -275,22 +280,22 @@ describe('workspace database view creation', () => {
   it('revokes access on disconnect and fetches again after reconnect', async () => {
     const { result } = mount();
 
-    await waitFor(() => expect(result.current.getAction(ViewLayout.Chart).type).toBe('create'));
+    await waitFor(() => expect(result.current.getAction(ViewLayout.Form).type).toBe('create'));
     act(() => {
       emitter.webSocketReadyState = 3;
       emitter.emit(APP_EVENTS.WEBSOCKET_STATUS);
     });
-    expect(result.current.getAction(ViewLayout.Chart)).toMatchObject({
+    expect(result.current.getAction(ViewLayout.Form)).toMatchObject({
       type: 'disabled',
       reason: 'databaseViewCreation.connectionRequired',
     });
-    expect(result.current.checkCreation(ViewLayout.Chart)).toBe(false);
+    expect(result.current.checkCreation(ViewLayout.Form)).toBe(false);
     act(() => {
       emitter.webSocketReadyState = 1;
       emitter.emit(APP_EVENTS.WEBSOCKET_STATUS);
     });
     await waitFor(() => expect(quota).toHaveBeenCalledTimes(2));
-    await waitFor(() => expect(result.current.getAction(ViewLayout.Chart).type).toBe('create'));
+    await waitFor(() => expect(result.current.getAction(ViewLayout.Form).type).toBe('create'));
   });
 
   it('coalesces real folder changes while a request is pending and ignores the stale response', async () => {
@@ -309,12 +314,12 @@ describe('workspace database view creation', () => {
     await act(async () => {
       pending.resolve(allowed);
     });
-    expect(result.current.getAction(ViewLayout.Chart).type).toBe('disabled');
+    expect(result.current.getAction(ViewLayout.Form).type).toBe('disabled');
     expect(quota).toHaveBeenCalledTimes(2);
     await act(async () => {
-      next.resolve({ can_create_form: true, can_create_chart: false });
+      next.resolve({ can_create_form: false, can_create_chart: true });
     });
-    expect(result.current.getAction(ViewLayout.Chart).type).toBe('upgrade');
+    expect(result.current.getAction(ViewLayout.Form).type).toBe('upgrade');
   });
 
   it('does not poll or let idle socket notifications starve a slow request; closed menus stop refreshing', async () => {
@@ -429,16 +434,16 @@ describe('workspace database view creation', () => {
   });
 
   it('keeps confirmed allowances and crowns after a failed background refresh', async () => {
-    quota.mockResolvedValueOnce({ can_create_form: true, can_create_chart: false });
+    quota.mockResolvedValueOnce({ can_create_form: false, can_create_chart: true });
     const { result } = mount();
 
-    await waitFor(() => expect(result.current.getAction(ViewLayout.Chart).type).toBe('upgrade'));
+    await waitFor(() => expect(result.current.getAction(ViewLayout.Form).type).toBe('upgrade'));
     quota.mockRejectedValueOnce(new Error('Server unavailable'));
     await act(async () => {
       emitter.emit(APP_EVENTS.FOLDER_VIEW_CHANGED);
     });
-    expect(result.current.getAction(ViewLayout.Chart)).toMatchObject({ type: 'upgrade', requiresPro: true });
-    expect(result.current.getAction(ViewLayout.Form).type).toBe('create');
+    expect(result.current.getAction(ViewLayout.Form)).toMatchObject({ type: 'upgrade', requiresPro: true });
+    expect(result.current.getAction(ViewLayout.Chart).type).toBe('create');
   });
 
   it('uses the Desktop upgrade message for each limited layout', async () => {
@@ -448,8 +453,9 @@ describe('workspace database view creation', () => {
     await waitFor(() => expect(result.current.getAction(ViewLayout.Form).type).toBe('upgrade'));
     await waitFor(() => expect(result.current.getAction(ViewLayout.Timeline).type).toBe('upgrade'));
     expect(result.current.getAction(ViewLayout.Form).reason).toBe('databaseViewCreation.upgradeForm');
-    expect(result.current.getAction(ViewLayout.Chart).reason).toBe('databaseViewCreation.upgradeChart');
     expect(result.current.getAction(ViewLayout.Timeline).reason).toBe('databaseViewCreation.upgradeTimeline');
+    // Keepinotion: charts are unlimited, so they never report an upgrade reason.
+    expect(result.current.getAction(ViewLayout.Chart).reason).toBeUndefined();
   });
 
   it('shows cached allowances and crowns on the first reopened render, then applies the refreshed quotas', async () => {
@@ -478,7 +484,7 @@ describe('workspace database view creation', () => {
     rendered.length = 0;
     rerender({ open: true });
     expect(rendered.length).toBeGreaterThan(0);
-    for (const frame of rendered) expect(frame).toEqual({ open: true, form: 'create', chart: 'upgrade' });
+    for (const frame of rendered) expect(frame).toEqual({ open: true, form: 'create', chart: 'create' });
     await act(async () => pending.resolve({ can_create_form: false, can_create_chart: true }));
     expect(result.current.getAction(ViewLayout.Form).type).toBe('upgrade');
     expect(result.current.getAction(ViewLayout.Chart).type).toBe('create');

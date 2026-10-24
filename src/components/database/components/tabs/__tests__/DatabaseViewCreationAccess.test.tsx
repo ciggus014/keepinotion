@@ -172,7 +172,7 @@ describe.each(['page', 'view'] as const)('Database %s creation menu', (surface) 
     fireEvent.click(screen.getByTestId(`add-timeline-${surface}-button`));
     await waitFor(() => expect(surface === 'page' ? mockAddPage : mockAddView).toHaveBeenCalledTimes(1));
   });
-  it.each(['timeline', 'chart', 'form'] as const)(
+  it.each(['timeline', 'form'] as const)(
     'offers the owner a %s crown and opens plan comparison before checkout, without creating a view',
     async (layout) => {
       mockWorkspaceId = `${surface}-${layout}-owner`;
@@ -279,6 +279,19 @@ describe.each(['page', 'view'] as const)('Database %s creation menu', (surface) 
     expect(screen.getByTestId('current-location').textContent).toBe(initialLocation);
   });
 
+  it('keeps charts creatable for a Member even when the chart allowance is exhausted', async () => {
+    mockWorkspaceId = `${surface}-chart-free`;
+    mockRole = Role.Member;
+    mockQuota.mockResolvedValue({ can_create_form: false, can_create_chart: false });
+    openMenu();
+    const chart = item('chart');
+
+    await waitFor(() => expect(chart.getAttribute('aria-disabled')).toBeNull());
+    expect(within(chart).queryByLabelText('Pro')).toBeNull();
+    fireEvent.click(chart);
+    await waitFor(() => expect(surface === 'page' ? mockAddPage : mockAddView).toHaveBeenCalledTimes(1));
+  });
+
   function item(layout: 'form' | 'chart' | 'timeline') {
     if (layout === 'timeline') return screen.getByTestId(`add-timeline-${surface}-button`);
     if (layout === 'form') return screen.getByTestId(surface === 'view' ? 'add-form-view-option' : 'add-form-button');
@@ -299,11 +312,15 @@ describe.each(['page', 'view'] as const)('Database %s creation menu', (surface) 
 
     fireEvent.pointerMove(form.parentElement!, { pointerType: 'mouse' });
     await waitFor(() => expect(screen.getByRole('tooltip').textContent).toBe('databaseViewCreation.askOwner'));
-    for (const layout of ['form', 'chart', 'timeline'] as const) {
+    for (const layout of ['form', 'timeline'] as const) {
       expect(item(layout).getAttribute('aria-disabled')).toBe('true');
       expect(within(item(layout)).queryByLabelText('Pro')).toBeNull();
       fireEvent.click(item(layout));
     }
+
+    // Keepinotion: charts carry no plan allowance, so they stay available.
+    expect(item('chart').getAttribute('aria-disabled')).toBeNull();
+    expect(within(item('chart')).queryByLabelText('Pro')).toBeNull();
 
     expect(mockCheckout).not.toHaveBeenCalled();
     expect(screen.getByTestId('current-location').textContent).toBe(initialLocation);
@@ -331,6 +348,7 @@ describe.each(['page', 'view'] as const)('Database %s creation menu', (surface) 
     await act(async () => resolve({ can_create_form: false, can_create_chart: true }));
     expect(item('form')).toBe(form);
     expect(within(form).getByLabelText('Pro')).toBeTruthy();
+    // Keepinotion: the chart never carries a crown, whatever the quota says.
     expect(within(chart).queryByLabelText('Pro')).toBeNull();
     mockQuota.mockResolvedValue({ can_create_form: true, can_create_chart: false });
     act(() => {
@@ -338,9 +356,8 @@ describe.each(['page', 'view'] as const)('Database %s creation menu', (surface) 
     });
     // Keep the confirmed menu state visible while the new quotas load.
     expect(within(form).getByLabelText('Pro')).toBeTruthy();
-    expect(chart.hasAttribute('data-disabled')).toBe(false);
-    await waitFor(() => expect(within(chart).getByLabelText('Pro')).toBeTruthy());
-    expect(within(form).queryByLabelText('Pro')).toBeNull();
+    await waitFor(() => expect(within(form).queryByLabelText('Pro')).toBeNull());
+    expect(within(chart).queryByLabelText('Pro')).toBeNull();
     expect(mockGetSubscriptions).toHaveBeenCalledTimes(1);
     expect(mockAddPage).not.toHaveBeenCalled();
     expect(mockAddView).not.toHaveBeenCalled();

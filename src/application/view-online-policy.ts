@@ -3,7 +3,7 @@ import i18next from 'i18next';
 import { ViewLayout } from '@/application/types';
 import { getWorkspacePlanPolicy } from '@/application/workspace-plan-policy';
 
-const ONLINE_VIEW_CREATION_REQUIRED = 'Connect to the internet to create Form or Chart views.';
+const ONLINE_VIEW_CREATION_REQUIRED = 'Connect to the internet to create Form views.';
 
 export function onlineViewCreationRequiredError(): Error {
   return new Error(

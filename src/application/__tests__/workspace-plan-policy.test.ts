@@ -22,7 +22,7 @@ describe('workspace plan deployment policies', () => {
     expect(policy.requiresOnlineViewCreation(ViewLayout.Chart)).toBe(false);
   });
 
-  it('retains hosted Free and Pro entitlements and requires online form/chart checks for both', () => {
+  it('retains hosted Free and Pro entitlements and requires online form checks for both', () => {
     const policy = getWorkspacePlanPolicy('cloud');
 
     expect(policy.usesHostedBilling).toBe(true);
@@ -31,7 +31,8 @@ describe('workspace plan deployment policies', () => {
     expect(policy.hasProAccess(SubscriptionPlan.Team)).toBe(true);
     expect(policy.hasProAccess(null)).toBe(false);
     expect(policy.requiresOnlineViewCreation(ViewLayout.Form)).toBe(true);
-    expect(policy.requiresOnlineViewCreation(ViewLayout.Chart)).toBe(true);
+    // Keepinotion: charts are unlimited, so a chart view needs no online check.
+    expect(policy.requiresOnlineViewCreation(ViewLayout.Chart)).toBe(false);
     expect(policy.requiresOnlineViewCreation(ViewLayout.Grid)).toBe(false);
     expect(policy.getUpgradeMessage('Upgrade to Pro to create more forms.')).toBe('Upgrade to Pro to create more forms.');
   });
@@ -46,7 +47,7 @@ describe('workspace plan deployment policies', () => {
       expect(policy.bypassesPlanLimits).toBe(false);
       expect(policy.hasProAccess(SubscriptionPlan.Pro)).toBe(false);
       expect(policy.getUpgradeMessage('Limit reached')).toBeUndefined();
-      expect(() => assertViewCreationOnline(ViewLayout.Chart)).toThrow('Connect to the internet');
+      expect(() => assertViewCreationOnline(ViewLayout.Form)).toThrow('Connect to the internet');
     }
   });
 

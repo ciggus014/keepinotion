@@ -78,18 +78,29 @@ describe('legacy authored Form and Chart creation', () => {
 
   afterEach(() => jest.restoreAllMocks());
 
-  it.each([ViewLayout.Form, ViewLayout.Chart])('rejects offline standalone and linked layout %s before sending', async (layout) => {
+  it('rejects offline standalone and linked Form layout before sending', async () => {
     jest.clearAllMocks();
     jest.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
 
-    await expect(addAppPage('workspace-id', 'parent-id', { layout, page_data: { authored: true } })).rejects.toThrow(
-      'Connect to the internet to create Form or Chart views.'
+    await expect(addAppPage('workspace-id', 'parent-id', { layout: ViewLayout.Form, page_data: { authored: true } })).rejects.toThrow(
+      'Connect to the internet to create Form views.'
     );
     await expect(createDatabaseView('workspace-id', 'source-id', {
-      database_id: 'database-id', parent_view_id: 'parent-id', layout, name: 'View',
-    })).rejects.toThrow('Connect to the internet to create Form or Chart views.');
+      database_id: 'database-id', parent_view_id: 'parent-id', layout: ViewLayout.Form, name: 'View',
+    })).rejects.toThrow('Connect to the internet to create Form views.');
     expect(executeAPIRequest).not.toHaveBeenCalled();
     expect(getAxios).not.toHaveBeenCalled();
+  });
+
+  it('lets an offline Chart creation through, since charts carry no online quota', async () => {
+    jest.clearAllMocks();
+    jest.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    jest.mocked(executeAPIRequest).mockResolvedValue({ view_id: 'chart-view-id' });
+
+    await expect(addAppPage('workspace-id', 'parent-id', {
+      layout: ViewLayout.Chart, page_data: { authored: true },
+    })).resolves.toEqual({ view_id: 'chart-view-id' });
+    expect(executeAPIRequest).toHaveBeenCalled();
   });
 
   it.each([ViewLayout.Form, ViewLayout.Chart])('does not apply the hosted offline gate to self-hosted layout %s', async (layout) => {

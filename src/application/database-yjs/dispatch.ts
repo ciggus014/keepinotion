@@ -3138,13 +3138,11 @@ export function useUpdateDatabaseLayout(viewId: string) {
 
       const planPolicy = getWorkspacePlanPolicy();
 
-      // Hosted Forms and Charts need atomic server admission. A local Yjs
-      // conversion would bypass the workspace quota, even after an online read.
-      if (
-        !planPolicy.bypassesPlanLimits &&
-        (layout === DatabaseViewLayout.Form || layout === DatabaseViewLayout.Chart)
-      ) {
-        const message = 'Use Add view to create Form or Chart views.';
+      // Hosted Forms need atomic server admission. A local Yjs conversion would
+      // bypass the workspace quota, even after an online read. Keepinotion:
+      // charts are unlimited, so they take the ordinary local path.
+      if (!planPolicy.bypassesPlanLimits && layout === DatabaseViewLayout.Form) {
+        const message = 'Use Add view to create Form views.';
 
         // Before i18next initializes, even a defaultValue can return undefined.
         return Promise.reject(new Error(t('databaseViewCreation.useAddView', { defaultValue: message }) || message));
