@@ -8,6 +8,7 @@ import type {
   SearchDocumentResponseItem,
   SearchSummary,
 } from '@/application/services/domains/search';
+import { collectSearchableDocuments, searchDocuments } from '@/application/search/local-search-index';
 import { View } from '@/application/types';
 import { getDatabaseIdFromExtra } from '@/application/view-utils';
 import { notify } from '@/components/_shared/notify';
@@ -190,9 +191,33 @@ function BestMatch({
     [currentWorkspaceId]
   );
 
+  // The outline is already in memory, so title matches can be answered without
+  // waiting for the network. Rebuilding is linear in the outline size and runs
+  // once per outline change, not per keystroke.
+  const localDocuments = useMemo(() => collectSearchableDocuments(outline || []), [outline]);
+
+  const localHits = useMemo(() => {
+    if (!searchValue) return [];
+
+    return searchDocuments(localDocuments, searchValue);
+  }, [localDocuments, searchValue]);
+
   const items = useMemo<SearchViewListItem[]>(() => {
     const seenTargets = new Set<string>();
     const items: SearchViewListItem[] = [];
+
+    // Local title matches first: they resolve the instant the user types.
+    for (const hit of localHits) {
+      const view = hit.document.view;
+
+      if (isSpaceView(view)) continue;
+
+      const targetId = `${view.view_id}:`;
+
+      if (seenTargets.has(targetId)) continue;
+      seenTargets.add(targetId);
+      items.push({ id: targetId, view });
+    }
 
     for (const item of searchResults) {
       const view = resolveSearchResultView(outline || [], item) || resultViews.get(searchResultKey(item));
@@ -215,7 +240,7 @@ function BestMatch({
     }
 
     return items;
-  }, [outline, resultViews, searchResults, t]);
+  }, [localHits, outline, resultViews, searchResults, t]);
 
   const handleSearch = useCallback(
     async (searchTerm: string) => {
@@ -416,7 +441,9 @@ function BestMatch({
 
   return (
     <ViewList
-      items={loading ? undefined : items}
+      // Local title hits render before the server answers; the spinner in
+      // `loading` still tells the user the body-text search is running.
+      items={items}
       loading={loading}
       query={searchValue}
       title={t('commandPalette.bestMatches')}

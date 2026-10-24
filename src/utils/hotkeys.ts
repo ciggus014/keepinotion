@@ -65,6 +65,8 @@ export enum HOT_KEY_NAME {
    */
   TOGGLE_THEME = 'toggle-theme',
   TOGGLE_SIDEBAR = 'toggle-sidebar',
+  GO_BACK = 'go-back',
+  GO_FORWARD = 'go-forward',
   QUICK_NOTE = 'quick-note',
   SEARCH = 'search',
   CREATE_CARD_AFTER = 'create-card-after',
@@ -81,7 +83,7 @@ export enum HOT_KEY_NAME {
   CALENDAR_TODAY = 'calendar-today',
 }
 
-const defaultHotKeys = {
+export const defaultHotKeys = {
   [HOT_KEY_NAME.ALIGN_LEFT]: ['control+shift+l'],
   [HOT_KEY_NAME.ALIGN_CENTER]: ['control+shift+e'],
   [HOT_KEY_NAME.ALIGN_RIGHT]: ['control+shift+r'],
@@ -114,6 +116,8 @@ const defaultHotKeys = {
   [HOT_KEY_NAME.SCROLL_TO_BOTTOM]: ['control+end'],
   [HOT_KEY_NAME.TOGGLE_THEME]: ['mod+shift+l'],
   [HOT_KEY_NAME.TOGGLE_SIDEBAR]: ['mod+.'],
+  [HOT_KEY_NAME.GO_BACK]: ['mod+['],
+  [HOT_KEY_NAME.GO_FORWARD]: ['mod+]'],
   [HOT_KEY_NAME.FORMAT_LINK]: ['mod+k'],
   [HOT_KEY_NAME.LEFT]: ['left'],
   [HOT_KEY_NAME.RIGHT]: ['right'],
@@ -129,7 +133,9 @@ const defaultHotKeys = {
   [HOT_KEY_NAME.MOVE_CURSOR_TO_TOP]: ['mod+up'],
   [HOT_KEY_NAME.ENTER]: ['enter'],
   [HOT_KEY_NAME.QUICK_NOTE]: ['mod+/'],
-  [HOT_KEY_NAME.SEARCH]: ['mod+p'],
+  // Notion binds both mod+p and mod+k to search; the editor keeps mod+k for
+  // link formatting only inside a text selection (see FORMAT_LINK).
+  [HOT_KEY_NAME.SEARCH]: ['mod+p', 'mod+k'],
   [HOT_KEY_NAME.TAB]: ['tab'],
   [HOT_KEY_NAME.SHIFT_TAB]: ['shift+tab'],
   [HOT_KEY_NAME.CREATE_CARD_AFTER]: ['shift+enter'],

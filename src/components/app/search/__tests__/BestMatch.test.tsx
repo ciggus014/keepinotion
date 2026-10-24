@@ -137,17 +137,28 @@ describe('BestMatch', () => {
     mockSearchWorkspaceDocumentPage
       .mockResolvedValueOnce({ has_more: true, items: [{ object_id: 'first' }], next_offset: 10 })
       .mockResolvedValueOnce({ has_more: false, items: [{ object_id: 'second' }], next_offset: null });
-    const { rerender } = renderBestMatch('page');
+    // Query a body-text term so the local title index stays empty and this
+    // case keeps exercising server pagination only.
+    const { rerender } = renderBestMatch('body');
 
     await screen.findByText('First page');
-    fireEvent.click(screen.getByText('Load more'));
+    fireEvent.click(await screen.findByText('Load more'));
     await screen.findByText('Second page');
     mockAppOutline = [createView({ view_id: 'first', name: 'Renamed page' }), mockAppOutline[1]];
-    rerender(<BestMatch askingAI={false} searchValue='page' onAskAI={jest.fn()} onClose={jest.fn()} />);
+    rerender(<BestMatch askingAI={false} searchValue='body' onAskAI={jest.fn()} onClose={jest.fn()} />);
     await screen.findByText('Renamed page');
     expect(screen.getByText('Second page')).toBeTruthy();
     expect(mockSearchWorkspaceDocumentPage).toHaveBeenCalledTimes(2);
     expect(mockGenerateSearchSummary).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows local title matches before the server answers', async () => {
+    mockAppOutline = [createView({ view_id: 'local', name: 'Local roadmap' })];
+    mockSearchWorkspaceDocumentPage.mockReturnValueOnce(new Promise(() => undefined));
+    renderBestMatch('roadmap');
+
+    // No await: the title hit is synchronous, the request never settles.
+    expect(screen.getByText('Local roadmap')).toBeTruthy();
   });
 
   it('ignores an old workspace response after switching workspaces with the same query', async () => {

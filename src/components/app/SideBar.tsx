@@ -8,6 +8,7 @@ import { Workspaces } from '@/components/app/workspaces';
 import { NotificationBell } from '@/components/notifications';
 
 import Outline from 'src/components/app/outline/Outline';
+import { useNavigationHotkeys } from '@/components/main/useNavigationHotkeys';
 import { Search } from 'src/components/app/search';
 
 
@@ -22,6 +23,9 @@ interface SideBarProps {
 
 function SideBar({ drawerWidth, drawerOpened, toggleOpenDrawer, onResizeDrawerWidth }: SideBarProps) {
   const [scrollTop, setScrollTop] = React.useState<number>(0);
+
+  // Global Notion-style navigation shortcuts (back/forward).
+  useNavigationHotkeys();
 
   const handleOnScroll = React.useCallback((scrollTop: number) => {
     setScrollTop(scrollTop);
