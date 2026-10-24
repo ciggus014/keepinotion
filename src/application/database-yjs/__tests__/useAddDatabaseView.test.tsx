@@ -123,16 +123,28 @@ describe('database layout conversion admission', () => {
     return { ...hook, databaseDoc, before, onUpdate };
   }
 
-  it('does not mutate or enqueue a Chart conversion while offline', async () => {
+  it('does not mutate or enqueue a Form conversion while offline', async () => {
     jest.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
     const fixture = setup();
 
-    await expect(fixture.result.current(DatabaseViewLayout.Chart)).rejects.toThrow(
-      'Use Add view to create Form or Chart views.'
+    await expect(fixture.result.current(DatabaseViewLayout.Form)).rejects.toThrow(
+      'Use Add view to create Form views.'
     );
     expect(getView).not.toHaveBeenCalled();
     expect(Y.encodeStateAsUpdate(fixture.databaseDoc)).toEqual(fixture.before);
     expect(fixture.onUpdate).not.toHaveBeenCalled();
+  });
+
+  it('converts a Chart locally while offline, since charts carry no online quota', () => {
+    jest.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    const fixture = setup();
+
+    act(() => { void fixture.result.current(DatabaseViewLayout.Chart); });
+
+    const views = getDatabase(fixture.databaseDoc).get(YjsDatabaseKey.views) as Y.Map<Y.Map<unknown>>;
+
+    expect(views.get('base-view-id')?.get(YjsDatabaseKey.layout)).toBe(DatabaseViewLayout.Chart);
+    expect(fixture.onUpdate).toHaveBeenCalled();
   });
 
   it.each([DatabaseViewLayout.Form, DatabaseViewLayout.Chart])('allows self-hosted layout %s conversion offline without a billing reachability read', (layout) => {
@@ -151,17 +163,30 @@ describe('database layout conversion admission', () => {
     expect(fixture.onUpdate).toHaveBeenCalled();
   });
 
-  it.each([DatabaseViewLayout.Form, DatabaseViewLayout.Chart])(
-    'requires atomic server creation for hosted layout %s even while online', async (layout) => {
-      jest.spyOn(navigator, 'onLine', 'get').mockReturnValue(true);
-      const fixture = setup();
+  it('requires atomic server creation for a hosted Form even while online', async () => {
+    jest.spyOn(navigator, 'onLine', 'get').mockReturnValue(true);
+    const fixture = setup();
 
-      await expect(fixture.result.current(layout)).rejects.toThrow('Use Add view to create Form or Chart views.');
-      expect(getView).not.toHaveBeenCalled();
-      expect(Y.encodeStateAsUpdate(fixture.databaseDoc)).toEqual(fixture.before);
-      expect(fixture.onUpdate).not.toHaveBeenCalled();
-    }
-  );
+    await expect(fixture.result.current(DatabaseViewLayout.Form)).rejects.toThrow(
+      'Use Add view to create Form views.'
+    );
+    expect(getView).not.toHaveBeenCalled();
+    expect(Y.encodeStateAsUpdate(fixture.databaseDoc)).toEqual(fixture.before);
+    expect(fixture.onUpdate).not.toHaveBeenCalled();
+  });
+
+  it('converts a hosted Chart locally without reaching the server', () => {
+    jest.spyOn(navigator, 'onLine', 'get').mockReturnValue(true);
+    const fixture = setup();
+
+    act(() => { void fixture.result.current(DatabaseViewLayout.Chart); });
+
+    const views = getDatabase(fixture.databaseDoc).get(YjsDatabaseKey.views) as Y.Map<Y.Map<unknown>>;
+
+    expect(views.get('base-view-id')?.get(YjsDatabaseKey.layout)).toBe(DatabaseViewLayout.Chart);
+    expect(getView).not.toHaveBeenCalled();
+    expect(fixture.onUpdate).toHaveBeenCalled();
+  });
 
   it.each([DatabaseViewLayout.Form, DatabaseViewLayout.Chart])('keeps existing hosted layout %s usable', (layout) => {
     const fixture = setup();

@@ -110,7 +110,7 @@ describe('slash database view admission', () => {
   });
 
   it('keeps checking for the rest of the slash session after a limited option was shown', () => {
-    mockSearch = 'chart';
+    mockSearch = 'timeline';
     const { rerender } = render(<SlashPanel setEmojiPosition={jest.fn()} />);
 
     expect(mockCreationOptions).toHaveBeenLastCalledWith(expect.objectContaining({ enabled: true }));
@@ -137,7 +137,7 @@ describe('slash database view admission', () => {
     listener.mockRestore();
   });
 
-  it.each(['timeline', 'linkedTimeline', 'chart', 'linkedChart'])(
+  it.each(['timeline', 'linkedTimeline'])(
     '%s shows a crown and opens checkout without touching the editor',
     (key) => {
       mockSearch = key;
@@ -148,9 +148,7 @@ describe('slash database view admission', () => {
       fireEvent.click(item);
       expect(mockCheckout).toHaveBeenCalledTimes(1);
       expect(mockClosePanel).toHaveBeenCalledTimes(1);
-      expect(mockCheckCreation).toHaveBeenCalledWith(
-        key.toLowerCase().includes('chart') ? ViewLayout.Chart : ViewLayout.Timeline
-      );
+      expect(mockCheckCreation).toHaveBeenCalledWith(ViewLayout.Timeline);
       expect(mockRemoveContent).not.toHaveBeenCalled();
       expect(mockEditor.flushLocalChanges).not.toHaveBeenCalled();
       expect(mockAddPage).not.toHaveBeenCalled();
